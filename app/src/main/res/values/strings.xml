@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">CollectLocation</string>
+    <string name="title_main">Collect Location</string>
+    <string name="latitude">Latitude</string>
+    <string name="longitude">Longitude</string>
+</resources>
