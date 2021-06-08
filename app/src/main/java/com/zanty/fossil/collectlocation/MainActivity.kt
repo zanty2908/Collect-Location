@@ -5,16 +5,28 @@ import android.content.Intent
 import android.location.Location
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import com.zanty.fossil.collectlocation.databinding.ActivityMainBinding
 import com.zanty.fossil.collectlocation.location.LocationHandler
-import com.zanty.fossil.collectlocation.location.LocationHandlerImpl
 import com.zanty.fossil.collectlocation.location.isLocationPermissionGranted
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var mBinding: ActivityMainBinding
     private val mLocationHandler by lazy { LocationHandler.create(this) }
+
+    private val findingAnimation by lazy {
+        ValueAnimator.ofFloat(0f, 1f)
+            .apply {
+                duration = 1000L
+                repeatCount = ValueAnimator.INFINITE
+                repeatMode = ValueAnimator.REVERSE
+                addUpdateListener {
+                    mBinding.ivCenter.alpha = it.animatedValue as Float
+                }
+            }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,10 +36,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
+        mLocationHandler.checkPermissions()
         if (isLocationPermissionGranted)
             mLocationHandler.checkGPSAndRequest()
-        else
-            mLocationHandler.checkPermissions()
+
     }
 
     private fun observerData() = with(mLocationHandler) {
@@ -35,6 +47,10 @@ class MainActivity : AppCompatActivity() {
             if (it == true) {
                 checkGPSAndRequest()
                 requestLastLocation()
+                findingAnimation.run {
+                    if (isRunning) return@run
+                    start()
+                }
             } else
                 requestLocationPermissions()
         }
@@ -49,6 +65,8 @@ class MainActivity : AppCompatActivity() {
     private var bearingAnimator: ValueAnimator? = null
 
     private fun drawViews(location: Location) = with(mBinding) {
+        group.isVisible = true
+
         val latitude = location.latitude
         val longitude = location.longitude
         tvLatitude.text = latitude.toString()
